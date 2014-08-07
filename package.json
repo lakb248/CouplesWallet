@@ -1,17 +1,12 @@
 {
-  "name": "CouplesWallet",
-  "version": "0.0.1",
-  "private": true,
-  "scripts": {
-    "start": "node ./bin/www"
-  },
-  "dependencies": {
-    "express": "~4.2.0",
-    "static-favicon": "~1.0.0",
-    "morgan": "~1.0.0",
-    "cookie-parser": "~1.0.1",
-    "body-parser": "~1.0.0",
-    "debug": "~0.7.4",
-    "jade": "~1.3.0"
-  }
+	"name" : "CoupleWallet" ,
+	"version" : "0.1.0" ,
+	"description" : "Couples Wallet App" ,
+	"main" : "app.js" ,
+	"author" : "lakb248" ,
+	"dependencies" : {
+		"express" : "~4.7.2" ,
+		"mongoose" : "~3.6.2" ,
+		"body-parser" : "~1.5.2"
+	}
 }

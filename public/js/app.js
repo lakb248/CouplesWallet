@@ -3,17 +3,24 @@
 // angular.module is a global place for creating, registering and retrieving Angular modules
 // 'starter' is the name of this angular module example (also set in a <body> attribute in index.html)
 // the 2nd parameter is an array of 'requires'
-angular.module('starter', ['ionic'])
+var couples = angular.module('couples', ['ionic','ngRoute']) ;
 
-.run(function($ionicPlatform) {
-  $ionicPlatform.ready(function() {
-    // Hide the accessory bar by default (remove this to show the accessory bar above the keyboard
-    // for form inputs)
-    if(window.cordova && window.cordova.plugins.Keyboard) {
-      cordova.plugins.Keyboard.hideKeyboardAccessoryBar(true);
-    }
-    if(window.StatusBar) {
-      StatusBar.styleDefault();
-    }
-  });
-})
+//Controller
+
+var couplesController = couples.controller('couplesController', ['$scope','$http',function($scope,$http){
+
+}]) ;
+
+var loginController = couples.controller('loginController', function($scope){
+  $scope.email = 'email' ;
+  $scope.password = 'password' ;
+  $scope.login = function(){alert('login');} ;
+}) ;
+
+couples.config(['$routeProvider',function($routeProvider){
+	$routeProvider.when('/',{
+		templateUrl:'views/login.html',
+		controller:'loginController'
+	}) ;
+}]) ;
+
