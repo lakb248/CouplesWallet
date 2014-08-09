@@ -11,26 +11,29 @@
     <!-- IF using Sass (run gulp sass first), then uncomment below and remove the CSS includes above
     <link href="css/ionic.app.css" rel="stylesheet">
     -->
-
+    
 
   </head>
   <body ng-app="couples" ng-controller="couplesController">
-    <div class="bar bar-header bar-positive">
-      <a class="button button-icon icon ion-link"></a>
-      <div class="title">Couples</div> 
-      <button class="button" ng-click="register">注册</button>
-    </div>
-    <div id="content" ng-view>
-      
-    </div>
+    
+    <ion-side-menus>
+    
+      <ion-side-menu-content>
+        <div class="bar bar-header bar-positive" ui-view="header"></div>
+        <div id="content" ui-view="container"></div>
+      </ion-side-menu-content>
+
+      <ion-side-menu side="left" is-enabled="{{!isLoaded}}">
+      </ion-side-menu>
+
+    </ion-side-menus>
+    <div id="cover" ng-show="isLoaded">Couples</div>
     <!-- ionic/angularjs js -->
     <script src="lib/ionic/js/ionic.bundle.js"></script>
-    <!--<script src="js/angular.min.js"></script>-->
-    <script src="js/angular-route.min.js"></script>
+    <!-- // <script src="js/angular.min.js"></script> -->
+    <!-- // <script src="js/angular-route.min.js"></script> -->
+    <script src="lib/angular-ui-router.js"></script>
     <!-- your app's js -->
     <script src="js/app.js"></script>
-    <script type="text/javascript">
-      document.cookie = "name='name';max-age=100000000000" ;
-    </script>
   </body>
 </html>
