@@ -8,8 +8,8 @@ couples.config(function($stateProvider,$urlRouterProvider){
 		.state('index',{
 			url:'/index',
 			views:{
-				'header':{templateUrl:'views/index_header.html'},
-				'container':{template:'Hello,World!!!'}
+				'header':{templateUrl:'views/main_header.html'},
+				'container':{templateUrl:'views/main.html'}
 			}
 		})
 		.state('login',{
@@ -111,6 +111,7 @@ var couplesController = couples.controller(
 	['$scope','$location','$state','UserService',
 	function($scope,$location,$state,UserService){
 		//$scope.isLoaded = false ;
+
 		$scope.register = function(){
 			// $location.path('/register') ;
 			$state.go('register') ;
@@ -157,8 +158,7 @@ var loginController = couples.controller(
 	  			) ;
 	  		}
 
-	  	} ;
-  
+	  	} ; 
 }]) ;
 
 var registerController = couples.controller(
