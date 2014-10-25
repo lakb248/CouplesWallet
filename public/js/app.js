@@ -1,7 +1,7 @@
 
 var couples = angular.module('couples', ['ionic','ui.router']) ;
 
-//config router
+//config router test appcache
 couples.config(function($stateProvider,$urlRouterProvider){
 	$urlRouterProvider.otherwise('/index') ;
 	$stateProvider

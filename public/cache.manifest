@@ -1,0 +1,18 @@
+CACHE MANIFEST
+#v0.12
+
+CACHE:
+lib/ionic/js/ionic.bundle.js
+lib/angular-ui-router.js
+js/app.js
+lib/ionic/css/ionic.css
+css/style.css
+views/login_header.html
+views/login.html
+lib/ionic/fonts/ionicons.ttf?v=1.5.2
+lib/ionic/fonts/ionicons.woff?v=1.5.2
+
+NETWORK:
+lib/ionic/fonts/ionicons.ttf?v=1.5.2
+lib/ionic/fonts/ionicons.woff?v=1.5.2
+css/style.css
