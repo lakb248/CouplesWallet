@@ -1,15 +1,16 @@
 var express = require('express') ;
 var router = express.Router() ;
-var userController = require('../controllers/userController') ;
+var noteController = require('../controllers/noteController') ;
 
-//register
-router.route('/register')
-	.post(userController.postUser) ;
-//login
-router.route('/login')
-	.post(userController.login) ;
-//get user info
-router.route('/user/:user_id')
-	.get(userController.getUser) ;
-
+/****note router****/
+//add note
+router.route('/note')
+	.post(noteController.addNote) ;
+//get and update note
+router.route('/note/:note_id')
+	.get(noteController.getNote)
+	.put(noteController.updateNote)
+	.delete(noteController.deleteNote);
+//get all notes
+router.route('/notes').get(noteController.getAllNotes) ;
 module.exports = router ;

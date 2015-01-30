@@ -1,0 +1,8 @@
+<label class="item item-input">
+    <input type="text" placeholder="标题" ng-model="note.title">
+</label>
+<br>
+<label class="item item-input">
+    <textarea placeholder="内容" rows="20" ng-model="note.content"></textarea>
+</label>
+<button class="button button-block button-positive" on-tap="updateNote()">保存</button>

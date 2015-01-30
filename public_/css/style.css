@@ -1,0 +1,42 @@
+/* Empty. Add your own CSS if you like */
+#content{
+    position: absolute;
+    top: 50px;
+    bottom: 0px;
+    width: 100%;
+    padding: 5px 10px;
+    overflow: auto;
+}
+#cover{
+    position: absolute;
+    top: 0px;
+    right: 0px;
+    bottom: 0px;
+    left: 0px;
+    margin:auto;
+    background-color: blue;
+    z-index: 999;
+    display:none;
+}
+.nav-item{
+    height: 90px;
+    padding: 10px;
+    /*margin: 10px auto;*/
+}
+.nav-icon{
+    float: left;
+    height: 70px;
+    width: 30%;
+    background-color: #145fd7;
+    /*outline: 1px solid black;*/
+}
+.nav-title{
+    float: left;
+    height: 70px;
+    width: 60%;
+    text-align: center;
+    /*outline: 1px solid black;*/
+    margin-left: 5%;
+    font-size: 20px;
+    line-height: 70px;
+}

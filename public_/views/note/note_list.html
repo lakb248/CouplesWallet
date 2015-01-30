@@ -1,0 +1,7 @@
+<ul class="notes-list">
+	<li ng-repeat="note in notes track by $index">
+		<div class="card" on-tap="go('show_note',$index)" on-hold="showDelete($index,$event)">
+			<div class="item item-text-wrap">{{note.title}}</div>
+		</div>
+	</li>
+</ul>

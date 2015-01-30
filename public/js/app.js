@@ -43,13 +43,13 @@ couples.factory('UserService', ['$http',function($http){
 		loginByUsername:function(username,password,success,fail){
 			$http.post(
 				'/api/login' ,
-				{username:username,password:password} 
+				{username:username,password:password}
 			).success(success).error(fail) ;
 		} ,
 		loginByToken:function(token,success,fail){
 			$http.post(
 				'/api/login' ,
-				{token:token} 
+				{token:token}
 			).success(success).error(fail) ;
 		} ,
 		updateUser:function(user,success,fail){
@@ -119,7 +119,7 @@ var couplesController = couples.controller(
 }]) ;
 
 var loginController = couples.controller(
-	'loginController', 
+	'loginController',
 	['$rootScope','$scope','UserService','$location',
 	function($rootScope,$scope,userService,$location){
 	  	$scope.username = '' ;
@@ -136,7 +136,7 @@ var loginController = couples.controller(
 	  		}else{
 	  			//login by username
 	  			userService.loginByUsername(
-	  				$scope.username , 
+	  				$scope.username ,
 	  				$scope.password ,
 	  				function(data){
 	  					var result = data.result ;
@@ -158,7 +158,7 @@ var loginController = couples.controller(
 	  			) ;
 	  		}
 
-	  	} ; 
+	  	} ;
 }]) ;
 
 var registerController = couples.controller(

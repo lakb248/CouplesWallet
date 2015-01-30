@@ -7,6 +7,7 @@
 	"dependencies" : {
 		"express" : "~4.7.2" ,
 		"mongoose" : "~3.6.2" ,
-		"body-parser" : "~1.5.2"
+		"body-parser" : "~1.5.2" ,
+	    "avoscloud-sdk" : "latest"
 	}
 }
