@@ -14,22 +14,32 @@
 	//api url
 	var URL = {
 		NOTE : '/api/note' ,
-		NOTES : '/api/notes'
+		NOTES : '/api/notes',
+        TASK : '/api/task' ,
+        TASKS : '/api/tasks'
 	} ;
 	//view Template
 	var TEMPLATE = {
-		INDEX_HEADER : '<div class="title">萌记</div>' ,
-		NOTE_HEADER : '<a class="button button-icon icon ion-ios-arrow-left" on-tap="go('+"'index'"+')"></a>' +
-					  '<div class="title">记录</div>'+
-					  '<a class="button button-icon icon ion-ios-plus-empty" on-tap="go(' + "'add_note'"+ ')"></a>' ,
-		ADD_NOTE_HEADER : '<a class="button button-icon icon ion-ios-arrow-left" on-tap="go('+"'note'"+')"></a>' +
-						  '<div class="title">记录</div>' ,
-		SHOW_NOTE_HEADER : '<a class="button button-icon icon ion-ios-arrow-left" on-tap="go('+"'note'"+')"></a>' +
-						   '<div class="title">记录</div>'+
-						   '<a class="button button-icon icon ion-ios-compose-outline" on-tap="go(' + "'edit_note'"+ ')"></a>' ,
-		EDIT_NOTE_HEADER : '<a class="button button-icon icon ion-ios-arrow-left" on-tap="go('+"'note'"+')"></a>' +
-						   '<div class="title">记录</div>',
-		DELETE_ICON : '<a class="button button-icon icon ion-android-cancel"></a>'
+		INDEX_HEADER : '<div class="title">萌记</div>'+
+					   '<a class="button button-icon icon ion-navicon"></a>',
+		//note headers
+		NOTE_HEADER : '<a class="button button-icon icon ion-ios7-arrow-left" on-tap="go('+"'index'"+')"></a>' +
+					  '<div class="title">日记</div>'+
+					  '<a class="button button-icon icon ion-ios7-plus-empty" on-tap="go(' + "'add_note'"+ ')"></a>' ,
+		ADD_NOTE_HEADER : '<a class="button button-icon icon ion-ios7-arrow-left" on-tap="go('+"'note'"+')"></a>' +
+						  '<div class="title">日记</div>' ,
+		SHOW_NOTE_HEADER : '<a class="button button-icon icon ion-ios7-arrow-left" on-tap="go('+"'note'"+')"></a>' +
+						   '<div class="title">日记</div>'+
+						   '<a class="button button-icon icon ion-ios7-compose-outline" on-tap="go(' + "'edit_note'"+ ')"></a>' ,
+		EDIT_NOTE_HEADER : '<a class="button button-icon icon ion-ios7-arrow-left" on-tap="go('+"'note'"+')"></a>' +
+						   '<div class="title">日记</div>',
+		//task headers
+		TASK_HEADER : '<a class="button button-icon icon ion-ios7-arrow-left" on-tap="go('+"'index'" + ')"></a>' +
+		  			  '<div class="title">任务</div>'+
+					  '<a class="button button-icon icon ion-ios7-plus-empty" on-tap="go(' + "'add_task'" + ')"></a>',
+		ADD_TASK_HEADER : '<a class="button button-icon icon ion-ios7-arrow-left" on-tap="go('+"'task'" + ')"></a>' +
+                          '<div class="title">任务</div>',
+        DELETE_ICON : '<a class="button button-icon icon ion-ios7-close"></a>'
  	} ;
 	//notes cache
 	var notes = null ;
@@ -47,17 +57,26 @@
 			.state('wallet',{
 				url:'/wallet',
 				views:{
-					'header':{templateUrl:'views/wallet_header.html'},
-					'container':{templateUrl:'views/wallet.html'}
+					'header':{templateUrl:'views/wallet/wallet_header.html'},
+					'container':{templateUrl:'views/wallet/wallet.html'}
 				}
 			})
+			//task states
 			.state('task',{
 				url:'/task',
 				views:{
-					'header':{templateUrl:'views/task/task_header.html'},
-					'container':{templateUrl:'views/task/task.html'}
+					'header':{template:TEMPLATE.TASK_HEADER},
+					'container':{templateUrl:'views/task/task.html',controller:'taskController'}
 				}
 			})
+            .state('add_task',{
+                url:'/task/add' ,
+                views:{
+                    'header':{template:TEMPLATE.ADD_TASK_HEADER},
+                    'container':{templateUrl:'views/task/add_task.html',controller:'addTaskController'}
+                }
+            })
+			//note states
 			.state('note',{
 				url:'/note',
 				views:{
@@ -120,6 +139,7 @@
 				} ;
 			}]
 	) ;
+	//note controller
 	//the controller of note view
 	var noteController = meng.controller(
 		'noteController',
@@ -248,7 +268,39 @@
 				}
 			} ;
 		}]
-	);
+	) ;
+	//task controller
+	//the controller of the task view
+	var taskController = meng.controller(
+		'taskController' ,
+		['$scope','$state',
+		function($scope,$state){
+			$scope.change = function(year,month){
+				console.log(year + ',' + month) ;
+			} ;
+			$scope.dateTap = function(year,month,date){
+				console.log(year + ',' + month + ',' + date) ;
+			} ;
+		}]
+	) ;
+    var addTaskController = meng.controller(
+        'addTaskController',
+        ['$scope','$state','TaskService',
+        function($scope,$state,TaskService){
+            $scope.title = '' ;
+            $scope.content = '' ;
+            $scope.date = new Date() ;
+            $scope.duration = 3 ;
+            $scope.frequency = 1 ;
+            $scope.addTask = function(){
+                console.log('title:' + $scope.title) ;
+                console.log('content:' + $scope.content) ;
+                console.log('date:' + $scope.date) ;
+                console.log('duration:' + $scope.duration) ;
+                console.log('frequency:' + $scope.frequency) ;
+            } ;
+        }]
+    ) ;
 	/***************************Service*****************************/
 	//NoteService
 	meng.factory('NoteService',['$http',function($http){
@@ -277,6 +329,39 @@
 			}
 		} ;
 	}]) ;
+    //TaskService
+    meng.factory('TaskService',['$http',function($http){
+        return {
+            addTask : function(title,content,date,duration,
+                               frequency,success,error){
+                $http.post(URL.TASK,
+                    {'title':title,'content':content,'date':date,
+                    'duration':duration,'frequency':frequency})
+                    .success(success)
+                    .error(error) ;
+            } ,
+            updateTask : function(id,title,content,date,duration,
+                                  frequency,success,error){
+                $http.put(URL.TASK + '/' + id,
+                    {'title':title,'content':content,'date':date,
+                    'duration':duration,'frequency':frequency})
+                    .success(success)
+                    .error(error) ;
+            } ,
+            getNotes : function(success,error){
+                $http.get(URL.TASKS)
+                    .success(success).error(error) ;
+            } ,
+            getNoteById : function(id,success,error){
+                $http.get(URL.TASK + '/' + id)
+                    .success(success).error(error) ;
+            } ,
+            deleteNote : function(id,success,error){
+                $http.delete(URL.TASK + '/' + id)
+                    .success(success).error(error) ;
+            }
+        } ;
+    }]) ;
 	//UtilService
 	//showAlert:show a alert panel according to the title and content
 	meng.factory('UtilService',['$ionicPopup',function($ionicPopup){
@@ -285,6 +370,156 @@
 				$ionicPopup.alert({
 					title : title ,
 					template : content
+				}) ;
+			}
+		} ;
+	}]) ;
+	/**************************Directive****************************/
+	//task calendar
+	meng.directive('taskCalendar',['UtilService',function(UtilService){
+		var year, month ;
+		var genCalendar = function(year,month){
+			year = +year ;
+			month = +month ;
+			var leap = function(year){
+				if((year%4===0&&year%100!==0)||year%400===0)
+					return 1 ;
+				else
+					return 0 ;
+			} ;
+			var getMaxDayOfMonth = function(year,month){
+				switch(month){
+					case 1 :
+					case 3 :
+					case 5 :
+					case 7 :
+					case 8 :
+					case 10 :
+					case 12 :
+						return 31 ;
+					case 4 :
+					case 6 :
+					case 9 :
+					case 11 :
+						return 30 ;
+					case 2 :
+						if(leap(year))
+							return 29 ;
+						else
+							return 28 ;
+				}
+			} ;
+			var getFirstDay = function(year,month){
+				var century , y ;
+				var w = 0 ;
+				century = Math.floor(year / 100) ;
+				y = year % 100 ;
+				if(month == 1 || month == 2){
+					century = Math.floor((year - 1) / 100) ;
+					y = (year - 1) % 100 ;
+					if(month == 1)
+						month = 13 ;
+					else
+						month = 14 ;
+				}
+				w = Math.floor(century / 4) - 2 * century + y + Math.floor(y / 4) + Math.floor(13 * ( month + 1 ) / 5) ;
+				w = w % 7 ;
+
+				while(w < 0){
+					w = w + 70 ;
+				}
+
+				return w % 7 ;
+			} ;
+			var html = '' ;
+			var blank = getFirstDay(year,month) ;
+			var length = getMaxDayOfMonth(year,month) ;
+			var row = '<div class="row">' ;
+			for(var i = 0 ; i < blank ; i ++){
+				row += '<div class="col" id="date0"></div>' ;
+			}
+			for(var i = 1 ; i <= length ; i ++){
+				row += '<div class="col" id="date' + i + '">' + i + '</div>' ;
+				blank++ ;
+				if(blank % 7 === 0){
+					row += '</div>' ;
+					html += row;
+					row = '<div class="row">' ;
+				}
+			}
+			if(blank % 7 !== 0){
+				blank = 7 - blank % 7 ;
+				for(var i = 0 ; i < blank ; i ++){
+					row += '<div class="col" id="data0"></div>'
+				}
+				row += '</div>' ;
+				html += row ;
+			}
+			return html ;
+		} ;
+		return {
+			restrict : 'E',
+			scope:{
+				onChange : '=onChange',
+				onDateTap : '=onDateTap'
+			} ,
+			template : function(elem,attr){
+				var now = new Date() ;
+				year = attr.year || now.getFullYear(),month = attr.month || now.getMonth() + 1 ;
+				var template =
+					'<div class="row">'+
+						'<div class="col card">'+
+							'<div class="item item-text-wrap" id="year-card">'+
+								attr.year + '年' +
+							'</div>'+
+						'</div>'+
+						'<div class="col card">'+
+							'<div class="item item-text-wrap" id="month-card">'+
+								attr.month + '月' +
+							'</div>'+
+						'</div>'+
+					'</div>'+
+					'<div class="row">'+
+						'<div class="col c-head">日</div>'+
+						'<div class="col c-head">一</div>'+
+						'<div class="col c-head">二</div>'+
+						'<div class="col c-head">三</div>'+
+						'<div class="col c-head">四</div>'+
+						'<div class="col c-head">五</div>'+
+						'<div class="col c-head">六</div>'+
+					'</div>'+
+					'<div class="calendar" on-swipe-right="lastMonth()" on-swipe-left="nextMonth()">' ;
+				return template + genCalendar(year,month) + '</div>';
+			} ,
+			link:function(scope,elem,attrs){
+				var year_card = document.getElementById('year-card'),
+					month_card = document.getElementById('month-card') ;
+				scope.nextMonth = function(){
+					month ++ ;
+					if(month >12){
+						year ++ ;
+						month = month % 12 ;
+					}
+					year_card.innerHTML = year + '年' ;
+					month_card.innerHTML = month + '月' ;
+					document.querySelector('.calendar').innerHTML = genCalendar(year,month) ;
+					scope.onChange(year,month) ;
+				} ;
+				scope.lastMonth = function(){
+					month -- ;
+					if(month < 1){
+						month += 12 ;
+						year -- ;
+					}
+					year_card.innerHTML = year + '年' ;
+					month_card.innerHTML = month + '月' ;
+					document.querySelector('.calendar').innerHTML = genCalendar(year,month) ;
+					scope.onChange(year,month) ;
+				} ;
+				angular.element(document.querySelector('.calendar')).on('click',function(e){
+					var date = e.target.id.substring(4) ;
+					if(date !== '0')
+						scope.onDateTap(year,month,date) ;
 				}) ;
 			}
 		} ;

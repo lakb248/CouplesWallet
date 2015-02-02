@@ -1,0 +1,39 @@
+<label class="item item-input">
+    <input type="text" placeholder="任务名称" ng-model="title">
+</label>
+<br/>
+<label class="item item-input">
+    <textarea placeholder="任务内容" rows="10" ng-model="content"></textarea>
+</label>
+<br/>
+<label class="item item-input item-select">
+    <div class="input-label">
+        开始时间
+    </div>
+    <input type="date" ng-model="date"/>
+</label>
+<label class="item item-input item-select">
+    <div class="input-label">
+        持续时间
+    </div>
+    <select ng-model="duration">
+        <option value="1">1天</option>
+        <option value="3">3天</option>
+        <option value="30">30天</option>
+        <opiton value="50">50天</opiton>
+        <option value="100">100天</option>
+    </select>
+</label>
+<label class="item item-input item-select">
+    <div class="input-label">
+        频率
+    </div>
+    <select ng-model="frequency">
+        <option value="1">每天</option>
+        <option value="2">两天</option>
+        <option value="3">三天</option>
+        <option value="4">四天</option>
+    </select>
+</label>
+<button class="button button-block button-positive" on-tap="addTask()">完成</button>
+

@@ -34,7 +34,7 @@ exports.findById = function(id,success,error){
 } ;
 //find all notes
 exports.findAll = function(success,error){
-	query.descending("createdAt") ;
+	query.descending('createdAt') ;
 	query.find({
 		success : success ,
 		error : error
@@ -51,4 +51,4 @@ exports.delete = function(id,success,error){
 		},
 		error : error
 	})
-}
+} ;

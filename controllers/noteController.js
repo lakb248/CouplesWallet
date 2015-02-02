@@ -25,7 +25,6 @@ exports.updateNote = function(req,res){
 //get all notes
 exports.getAllNotes = function(req,res){
 	Note.findAll(function(notes){
-		console.log(notes) ;
 		res.json({'status':1,'notes':notes}) ;
 	},function(object,error){
 		res.json({'status':0,'message':error}) ;
