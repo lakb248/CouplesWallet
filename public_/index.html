@@ -7,6 +7,7 @@
 
     <link href="lib/ionic/css/ionic.min.css" rel="stylesheet">
     <link href="lib/ionic/css/ionicons.min.css" rel="stylesheet"/>
+    <link rel="stylesheet" href="lib/bower_components/angular-material/angular-material.css">
     <link href="css/style.css" rel="stylesheet">
 
     <!-- IF using Sass (run gulp sass first), then uncomment below and remove the CSS includes above
@@ -17,10 +18,10 @@
   </head>
   <body ng-app="meng" ng-controller="mengController">
 
-      <ion-content scroll="false">
+    <ion-content scroll="false">
         <ion-header-bar class="bar-positive" ui-view="header"></ion-header-bar>
         <div id="content" ui-view="container"></div>
-      </ion-content>
+    </ion-content>
 
     <!-- ionic/angularjs js -->
     <script src="lib/ionic/js/ionic.bundle.js"></script>

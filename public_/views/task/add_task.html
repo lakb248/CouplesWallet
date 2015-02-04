@@ -24,7 +24,7 @@
         <option value="100">100天</option>
     </select>
 </label>
-<label class="item item-input item-select">
+<label class="item item-input item-select" ng-show="duration >= 30">
     <div class="input-label">
         频率
     </div>
@@ -35,5 +35,4 @@
         <option value="4">四天</option>
     </select>
 </label>
-<button class="button button-block button-positive" on-tap="addTask()">完成</button>
-
+<button class="button button-block button-positive" on-tap="addTask()" md>完成</button>

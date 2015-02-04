@@ -42,7 +42,7 @@ exports.findById = function(id,success,error){
 } ;
 //find all tasks
 exports.findAll = function(success,error){
-    query.descending('createAt') ;
+    query.descending('date') ;
     query.find({
         success : success ,
         error : error
