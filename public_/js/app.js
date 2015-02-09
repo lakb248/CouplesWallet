@@ -11,7 +11,10 @@
 			_index : -1
 		} ,
         SHOW_TASK : {
-            _state : 'show_task' ,
+            _state : 'task_list' ,
+            _year : new Date().getFullYear() ,
+            _month : new Date().getMonth() + 1 ,
+            _day : new Date().getDate() ,
             _index : -1
         }
 	} ;
@@ -43,10 +46,17 @@
 					  '<a class="button button-icon icon ion-ios7-plus-empty" on-tap="go(' + "'add_task'" + ')"></a>',
 		ADD_TASK_HEADER : '<a class="button button-icon icon ion-ios7-arrow-left" on-tap="go('+"'task'" + ')"></a>' +
                           '<div class="title">任务</div>',
-        DELETE_ICON : '<a class="button button-icon icon ion-ios7-close"></a>'
+        DELETE_ICON : '<a class="button button-icon icon ion-ios7-close"></a>',
+        TASK_CELL : '<div class="task-cell"></div>' ,
+        TASK_DONE_CELL : '<div class="task-cell task-done"></div>'
  	} ;
 	//cache
-	var notes = null, tasks = [], taskMap = {};
+    var CACHE = {
+        NOTES : null ,
+        TASKS : [] ,
+        TASKS_MAP : {}
+    } ;
+    var MILSECOND_PER_DAY = 24 * 60 * 60 * 1000 ;
 	//route config
 	meng.config(function($stateProvider,$urlRouterProvider){
 		$urlRouterProvider.otherwise('/index') ;
@@ -78,6 +88,13 @@
                 views:{
                     'header':{template:TEMPLATE.ADD_TASK_HEADER},
                     'container':{templateUrl:'views/task/add_task.html',controller:'addTaskController'}
+                }
+            })
+            .state('task_list',{
+                url:'/task/list/' ,
+                views:{
+                    'header':{template:TEMPLATE.ADD_TASK_HEADER},
+                    'container':{templateUrl:'views/task/task_list.html',controller:'taskListController'}
                 }
             })
 			//note states
@@ -151,9 +168,9 @@
 			function($scope,$http,$state,NoteService){
 				//todo loading animation
 				//load notes from server or local cache
-				if(notes){
+				if(CACHE.NOTES){
 					console.log('load from local') ;
-					$scope.notes = notes ;
+					$scope.notes = CACHE.NOTES ;
 				}else{
 					NoteService.getNotes(function(data){
 						$scope.notes = notes = data.notes ;
@@ -180,7 +197,7 @@
 						NoteService.deleteNote(notes[index].objectId,function(data){
 							if(data.status === 1){
 								//delete the note from local cache , then remove all delete buttons
-								notes.splice(index,1) ;
+								CACHE.NOTES.splice(index,1) ;
 								angular.element(document.querySelector('.ion-android-cancel')).remove() ;
 							}else{
 								console.log(data.message) ;
@@ -214,7 +231,7 @@
 						NoteService.addNote(title,content,function(data){
 							if(data.status === 1){
 								//add the note to the local cache
-								notes.unshift(data.note) ;
+								CACHE.NOTES.unshift(data.note) ;
 								//return to the note view
 								$state.go('note') ;
 							}else{
@@ -234,7 +251,7 @@
 		function($scope){
 			//get the index in the application state,then show the note
 			var index = STATE.SHOW_NOTE._index ;
-			$scope.note = notes[index] ;
+			$scope.note = CACHE.NOTES[index] ;
 		}]
 	) ;
 	var editNoteController = meng.controller(
@@ -242,7 +259,7 @@
 		['$scope','$state','NoteService','UtilService',
 		function($scope,$state,NoteService,UtilService){
 			//get note from the local cache
-			var note = notes[STATE.SHOW_NOTE._index] ;
+			var note = CACHE.NOTES[STATE.SHOW_NOTE._index] ;
 			$scope.note = {
 				title : note.title ,
 				content : note.content
@@ -260,7 +277,7 @@
 					NoteService.updateNote(note.objectId,title,content,function(data){
 						if(data.status === 1){
 							//update the note in the local cache
-							notes[STATE.SHOW_NOTE._index] = data.note ;
+							CACHE.NOTES[STATE.SHOW_NOTE._index] = data.note ;
 							//go to the show note view
 							$state.go('show_note') ;
 						}else{
@@ -277,136 +294,61 @@
 	//the controller of the task view
 	var taskController = meng.controller(
 		'taskController' ,
-		['$scope','$state','TaskService',
-		function($scope,$state,TaskService){
-
-            var compareDate = function(date1,date2){
-                //change date from string to int , then compare the value
-                var dates1 = date1.split('/'),dates2 = date2.split('/') ;
-                var year1 = dates1[0], month1 = dates1[1], day1 = dates1[2],
-                    year2 = dates2[0], month2 = dates2[1], day2 = dates2[2] ;
-                month1 = month1.length === 1 ? '0' + month1 : month1 ;
-                month2 = month2.length === 1 ? '0' + month2 : month2 ;
-                day1 = day1.length === 1 ? '0' + day1 : day1 ;
-                day2 = day2.length === 1 ? '0' + day2 : day2 ;
-
-                date1 = +(year1 + month1 + day1) ;
-                date2 = +(year2 + month2 + day2) ;
-
-                return date1 >= date2 ;
-            } ;
-            var leap = function(year){
-                if((year%4===0&&year%100!==0)||year%400===0)
-                    return 1 ;
-                else
-                    return 0 ;
-            } ;
-            var getMaxDayOfMonth = function(year,month){
-                switch(month){
-                    case 1 :
-                    case 3 :
-                    case 5 :
-                    case 7 :
-                    case 8 :
-                    case 10 :
-                    case 12 :
-                        return 31 ;
-                    case 4 :
-                    case 6 :
-                    case 9 :
-                    case 11 :
-                        return 30 ;
-                    case 2 :
-                        if(leap(year))
-                            return 29 ;
-                        else
-                            return 28 ;
-                }
-            } ;
-            var afterSomeDays = function(date,duration){
-                var mSecondPerDay = 24 * 60 * 60 * 1000 ;
-                var future = new Date(new Date(date) + duration * mSecondPerDay) ;
-                var year = future.getFullYear(), month = future.getMonth() + 1, day = future.getDate() ;
-                return year + '/' + month + '/' + day ;
-            } ;
-            var getTasksByMonth = function(tasks,year,month){
-                var length = tasks.length ;
-                var results = [] ;
-                var startDate = afterSomeDays(year + '/' + month + '/1',-100),
-                    startOfMonth = year + '/' + month + '/1',
-                    endOfMonth = year + '/' + month + '/' + getMaxDayOfMonth(year,month) ;
-                var temp,date,duration;
-                for(var i = 0 ; i < length ; i++){
-                    temp = tasks[i] ;
-                    date = temp.date,duration = temp.duration ;
-                    if(compareDate(date,startDate)){
-                        if(compareDate(afterSomeDays(date,duration),startOfMonth) ||
-                        (compareDate(date,startOfMonth)&&compareDate(endOfMonth,date))){
-                            //if the date of task is between startOfMonth and endOfMonth,
-                            //push the task into the results
-                            results.push(temp) ;
-                            continue ;
-                        }
-                    }
-                    if(compareDate(date,endOfMonth)){
-                        break ;
-                    }
-                }
-                return results ;
-            } ;
-            var mapTasksToCalendar = function(tasks,year,month){
-                var length = tasks.length,
-                    startOfMonth = year + '/' + month + '/1',
-                    endOfMonth = year +'/' + month + '/' + getMaxDayOfMonth(year,month);
-                var taskMap = {} ;
-                var temp,date,endOfTask;
-                for(var i = 0 ; i < length ; i ++){
-                    temp = tasks[i] ;
-                    date = temp.date, duration = temp.duration ;
-                    if(!compareDate(date,startOfMonth)){
-                        var parts = afterSomeDays(date,duration).split('/') ;
-                        if((+parts[0]) > (+year) || (+parts[1]) > (+month))
-                            endOfTask = endOfMonth.split('/')[2] ;
-                        else
-                            endOfTask = parts[2] ;
-                        endOfTask = +endOfTask ;
-                        for(var j = 1 ; j <= endOfTask;j ++){
-                            taskMap[j] = taskMap[j] || [] ;
-                            taskMap[j].push(temp) ;
-                        }
-                    }else{
-                        var parts = afterSomeDays(date,duration).split('/') ;
-                        if((+parts[0]) > (+year) || (+parts[1]) > (+month))
-                            endOfTask = endOfMonth.split('/')[2] ;
-                        else
-                            endOfTask = parts[2] ;
-                        endOfTask = +endOfTask ;
-                        for(var j = +date.split('/')[2] ; j <= endOfTask ; j ++){
-                            taskMap[j] = taskMap[j] || [] ;
-                            taskMap[j].push(temp) ;
-                        }
-                    }
-                }
-                return taskMap ;
-            } ;
-            var showCalendarByTasks = function(calendar,taskMap,year,month){
-                var endDate = getMaxDayOfMonth(year,month) ;
-                var tasks, length ;
+		['$scope','$state','TaskService','TaskHelper',
+		function($scope,$state,TaskService,TaskHelper){
+            var showCalendarByTasks = function(taskMap,year,month){
+                var endDate = TaskHelper.getMaxDayOfMonth(year,month) ;
+                var tasks, length,panel;
                 for(var i = 1 ; i <= endDate ; i ++){
-                    tasks = taskMap[i] ;
+                    tasks = taskMap[i] || [] ;
                     length = tasks.length ;
                     for(var j = 0 ; j < length ; j ++){
-
-                        //document.getElementById('date' + i).getElementById('tasks').innerHTML +=
+                        panel = angular.element(document.getElementById('date' + i).querySelector('.task-panel'));
+                        panel.append(angular.element(TEMPLATE.TASK_CELL)) ;
                     }
                 }
+            } ;
+            $scope.change = function(year,month){
+                var results = TaskHelper.getTasksByMonth(CACHE.TASKS,year,month) ;
+                CACHE.TASKS_MAP = TaskHelper.mapTasksToCalendar(results,year,month) ;
+                showCalendarByTasks(CACHE.TASKS_MAP,year,month) ;
+            } ;
+            $scope.dateTap = function(year,month,date){
+                STATE.SHOW_TASK._index = date ;
+                STATE.SHOW_TASK._year = year ;
+                STATE.SHOW_TASK._month = month ;
+                STATE.SHOW_TASK._day = date ;
+                $state.go(STATE.SHOW_TASK._state) ;
+            } ;
+            $scope.taskDone = function(event,index){
+                var isDone = event.target.checked ;
+                var checkTask = $scope.todayTasks[index] ;
+                //todo update done array of checkTask , maybe then update the calendar view
+                checkTask.done[TaskHelper.getPosition(checkTask,new Date().toLocaleDateString())] = +isDone ;
+                TaskService.updateTask(checkTask.objectId,checkTask.title,checkTask.content,checkTask.date,
+                    checkTask.duration,checkTask.frequency,checkTask.done,function(){},function(){}) ;
             } ;
 
             //get all tasks
             //todo improve the performance by some way
-            TaskService.getNotes(function(data){
+            TaskService.getTasks(function(data){
                 if(data.status === 1){
-                    tasks = data.tasks ;
+                    CACHE.TASKS = data.tasks ;
+                    var now = new Date() ;
+                    var year = now.getFullYear(),month = now.getMonth() + 1 ;
+                    var results = TaskHelper.getTasksByMonth(CACHE.TASKS,year,month) ;
+                    CACHE.TASKS_MAP = TaskHelper.mapTasksToCalendar(results,year,month) ;
+                    showCalendarByTasks(CACHE.TASKS_MAP,year,month) ;
+                    var todayTasks = CACHE.TASKS_MAP[now.getDate()];
+                    $scope.todayTasks = todayTasks ;
+                    $scope.taskObjs = [] ;
+                    //set task checkbox status
+                    for(var i = todayTasks.length - 1 ; i >= 0 ; i --){
+                        var taskObj = {} ;
+                        taskObj.task = todayTasks[i] ;
+                        taskObj.done = !!todayTasks[i].done[TaskHelper.getPosition(todayTasks[i],now.toLocaleDateString())] ;
+                        $scope.taskObjs.unshift(taskObj) ;
+                    }
                 }else{
                     console.log(data.message) ;
                 }
@@ -414,13 +356,7 @@
                 console.log(data) ;
             }) ;
 
-			$scope.change = function(year,month){
-				var tasks = getTasksByMonth(year,month) ;
-                showCalendarByTasks(tasks,year,month) ;
-			} ;
-			$scope.dateTap = function(year,month,date){
-				console.log(year + ',' + month + ',' + date) ;
-			} ;
+
 		}]
 	) ;
     var addTaskController = meng.controller(
@@ -431,7 +367,7 @@
             $scope.content = '' ;
             $scope.date = new Date() ;
             $scope.duration = 1 ;
-            $scope.frequency = 1 ;
+            $scope.frequency = 0 ;
 
             $scope.addTask = function(){
 
@@ -439,17 +375,18 @@
                     date = new Date($scope.date).toLocaleDateString(),
                     duration = $scope.duration,
                     frequency = $scope.frequency ;
-                //reset frequency according to duration
-                if(duration < 30)
-                    frequency = 1 ;
+                var done = new Array(duration) ;
+                for(var i = 0 ; i < duration ; i ++){
+                    done[i] = 0 ;
+                }
 
                 if(title.replace(REGEX.EMPTY,'').length === 0){
                     UtilService.showAlert('臭蛋蛋说','别忘了输入标题!') ;
                 }else{
-                    TaskService.addTask(title,content,date,duration,frequency,
+                    TaskService.addTask(title,content,date,duration,frequency,done,
                         function(data){
                             if(data.status === 1){
-                                tasks.push(data.task) ;
+                                CACHE.TASKS.push(data.task) ;
                                 $state.go('task') ;
                             }else{
                                 console.log(data) ;
@@ -458,6 +395,29 @@
                             console.log(data) ;
                         }) ;
                 }
+            } ;
+        }]
+    ) ;
+    var taskListController = meng.controller(
+        'taskListController' ,
+        ['$scope','$state','TaskService','TaskHelper',function($scope,$state,TaskService,TaskHelper){
+            var chooseTasks = CACHE.TASKS_MAP[STATE.SHOW_TASK._index] ;
+            var date = STATE.SHOW_TASK._year + '/' + STATE.SHOW_TASK._month + '/' + STATE.SHOW_TASK._day ;
+            var length = chooseTasks.length ;
+            $scope.taskObjs = [] ;
+            for(var i = 0 ; i < length ; i ++){
+                var obj = {} ;
+                obj.task = chooseTasks[i] ;
+                obj.done = chooseTasks[i].done[TaskHelper.getPosition(chooseTasks[i],date)] ;
+                $scope.taskObjs.push(obj) ;
+            }
+            $scope.taskDone = function(event,index){
+                var isDone = event.target.checked ;
+                var checkTask = $scope.taskObjs[index].task ;
+                //todo update the calendar view
+                checkTask.done[TaskHelper.getPosition(checkTask,date)] = +isDone ;
+                TaskService.updateTask(checkTask.objectId,checkTask.title,checkTask.content,checkTask.date,
+                    checkTask.duration,checkTask.frequency,checkTask.done,function(){},function(){}) ;
             } ;
         }]
     ) ;
@@ -493,35 +453,197 @@
     meng.factory('TaskService',['$http',function($http){
         return {
             addTask : function(title,content,date,duration,
-                               frequency,success,error){
+                               frequency,done,success,error){
                 $http.post(URL.TASK,
                     {'title':title,'content':content,'date':date,
-                    'duration':duration,'frequency':frequency})
+                    'duration':+duration,'frequency':+frequency,'done':done})
                     .success(success)
                     .error(error) ;
             } ,
             updateTask : function(id,title,content,date,duration,
-                                  frequency,success,error){
+                                  frequency,done,success,error){
                 $http.put(URL.TASK + '/' + id,
                     {'title':title,'content':content,'date':date,
-                    'duration':duration,'frequency':frequency})
+                    'duration':duration,'frequency':frequency,'done':done})
                     .success(success)
                     .error(error) ;
             } ,
-            getNotes : function(success,error){
+            getTasks : function(success,error){
                 $http.get(URL.TASKS)
                     .success(success).error(error) ;
             } ,
-            getNoteById : function(id,success,error){
+            getTaskById : function(id,success,error){
                 $http.get(URL.TASK + '/' + id)
                     .success(success).error(error) ;
             } ,
-            deleteNote : function(id,success,error){
+            deleteTask : function(id,success,error){
                 $http.delete(URL.TASK + '/' + id)
                     .success(success).error(error) ;
             }
         } ;
     }]) ;
+    //TaskHelper
+    meng.factory('TaskHelper',function(){
+        return {
+            dateToInt : function(date){
+                var parts = date.split('/') ;
+                var year = parts[0], month = parts[1], day = parts[2] ;
+                month = month.length === 1 ? '0' + month : month ;
+                day = day.length === 1 ? '0' + day : day ;
+
+                return +(year + month + day) ;
+            } ,
+            compareDate : function(date1,date2){
+                return this.dateToInt(date1) >= this.dateToInt(date2) ;
+            } ,
+            leap : function(year){
+                if((year%4===0&&year%100!==0)||year%400===0)
+                    return 1 ;
+                else
+                    return 0 ;
+            } ,
+            getMaxDayOfMonth : function(year,month){
+                switch(month){
+                    case 1 :
+                    case 3 :
+                    case 5 :
+                    case 7 :
+                    case 8 :
+                    case 10 :
+                    case 12 :
+                        return 31 ;
+                    case 4 :
+                    case 6 :
+                    case 9 :
+                    case 11 :
+                        return 30 ;
+                    case 2 :
+                        if(this.leap(year))
+                            return 29 ;
+                        else
+                            return 28 ;
+                }
+            } ,
+            afterSomeDays : function(date,duration){
+                var future = new Date(new Date(date).getTime() + duration * MILSECOND_PER_DAY) ;
+                var year = future.getFullYear(), month = future.getMonth() + 1, day = future.getDate() ;
+                return year + '/' + month + '/' + day ;
+            } ,
+            getTotalDuration : function(duration,frequency){
+                if(frequency === 0){
+                    return duration ;
+                }
+                var blank = 0 ;
+                for(var i = 1 ; i <= duration ; i ++){
+                    if(i % (frequency + 1) === 0){
+                        duration ++ ;
+                    }
+                }
+                return duration ;
+            } ,
+            getTasksByMonth : function(tasks,year,month){
+                var length = tasks.length ;
+                var results = [] ;
+                var startDate = this.afterSomeDays(year + '/' + month + '/1',-99),
+                    startOfMonth = year + '/' + month + '/1',
+                    endOfMonth = year + '/' + month + '/' + this.getMaxDayOfMonth(year,month) ;
+                var temp,date,duration;
+                for(var i = 0 ; i < length ; i++){
+                    temp = tasks[i] ;
+                    date = temp.date,duration = this.getTotalDuration(temp.duration,temp.frequency) ;
+                    if(this.compareDate(date,endOfMonth)){
+                        continue ;
+                    }
+                    if(this.compareDate(date,startDate)){
+                        if(this.compareDate(this.afterSomeDays(date,duration-1),startOfMonth) ||
+                            (this.compareDate(date,startOfMonth)&&this.compareDate(endOfMonth,date))){
+                            //if the date of task is between startOfMonth and endOfMonth,
+                            //push the task into the results
+                            results.push(temp) ;
+                            continue ;
+                        }
+                    }
+
+                }
+                return results ;
+            } ,
+            mapTasksToCalendar : function(tasks,year,month){
+                var length = tasks.length,
+                    startOfMonth = year + '/' + month + '/1',
+                    endOfMonth = year +'/' + month + '/' + this.getMaxDayOfMonth(year,month);
+                var taskMap = {} ;
+                var temp,date,duration,frequency,endOfTask;
+                for(var i = 0 ; i < length ; i ++){
+                    temp = tasks[i] ;
+                    date = temp.date, duration = this.getTotalDuration(temp.duration,temp.frequency),frequency = temp.frequency ;
+                    if(!this.compareDate(date,startOfMonth)){
+                        var parts = this.afterSomeDays(date,duration-1).split('/') ;
+                        if((+parts[0]) > (+year) || (+parts[1]) > (+month))
+                            endOfTask = endOfMonth.split('/')[2] ;
+                        else
+                            endOfTask = parts[2] ;
+                        endOfTask = +endOfTask ;
+
+                        var doneOfTask = (new Date(startOfMonth).getTime() - new Date(date).getTime())/MILSECOND_PER_DAY ;
+                        if(frequency === 0){
+                            for(var j = 1 ; j <= endOfTask;j ++){
+                                taskMap[j] = taskMap[j] || [] ;
+                                taskMap[j].push(temp) ;
+                            }
+                        }else{
+                            for(var j = 1 ; j <= endOfTask;j ++){
+                                doneOfTask ++ ;
+                                if(doneOfTask % (frequency + 1) === 0)
+                                    continue ;
+                                taskMap[j] = taskMap[j] || [] ;
+                                taskMap[j].push(temp) ;
+                            }
+                        }
+                    }else{
+                        var parts = this.afterSomeDays(date,duration-1).split('/') ;
+                        if((+parts[0]) > (+year) || (+parts[1]) > (+month))
+                            endOfTask = endOfMonth.split('/')[2] ;
+                        else
+                            endOfTask = parts[2] ;
+                        endOfTask = +endOfTask ;
+                        if(frequency === 0){
+                            for(var j = +date.split('/')[2]; j <= endOfTask ; j ++){
+                                taskMap[j] = taskMap[j] || [] ;
+                                taskMap[j].push(temp) ;
+                            }
+                        }else{
+                            for(var j = +date.split('/')[2],i=1; j <= endOfTask ; j ++,i ++){
+                                if(i % (frequency + 1) === 0)
+                                    continue ;
+                                taskMap[j] = taskMap[j] || [] ;
+                                taskMap[j].push(temp) ;
+                            }
+                        }
+
+                    }
+                }
+                return taskMap ;
+            } ,
+            getPosition : function(task,date){
+                var startDate = task.date,frequency = task.frequency,done = task.done ;
+                var diff = (new Date(date).getTime() - new Date(startDate).getTime())/MILSECOND_PER_DAY ;
+                //if frequency is 0 , the diff is the position of the task
+                if(frequency == 0){
+                    return diff ;
+                }
+                //else travel the done array to find the position of the task
+                var length = done.length,position = 0,i = 1;
+                for(;  i <= length ; i ++){
+                    if(i % (frequency+1) === 0)
+                        continue ;
+                    if(position === diff)
+                        break ;
+                    position ++ ;
+                }
+                return position ;
+            }
+        } ;
+    }) ;
 	//UtilService
 	//showAlert:show a alert panel according to the title and content
 	meng.factory('UtilService',['$ionicPopup',function($ionicPopup){
@@ -1018,7 +1140,10 @@
 				row += '<div class="col" id="date0"></div>' ;
 			}
 			for(var i = 1 ; i <= length ; i ++){
-				row += '<div class="col" id="date' + i + '">' + i + '</div>' ;
+                if(i === new Date().getDate())
+                    row += '<div class="col today" id="date' + i + '">' + i + '<div class="task-panel"></div></div>' ;
+				else
+                    row += '<div class="col" id="date' + i + '">' + i + '<div class="task-panel"></div></div>' ;
 				blank++ ;
 				if(blank % 7 === 0){
 					row += '</div>' ;
@@ -1049,12 +1174,12 @@
 					'<div class="row">'+
 						'<div class="col card">'+
 							'<div class="item item-text-wrap" id="year-card">'+
-								attr.year + '年' +
+								year + '年' +
 							'</div>'+
 						'</div>'+
 						'<div class="col card">'+
 							'<div class="item item-text-wrap" id="month-card">'+
-								attr.month + '月' +
+								month + '月' +
 							'</div>'+
 						'</div>'+
 					'</div>'+

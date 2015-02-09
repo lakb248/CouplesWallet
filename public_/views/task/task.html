@@ -1,31 +1,13 @@
-<task-calendar year="2015" month="2" on-change="change" on-date-tap="dateTap"></task-calendar>
-<div class="card">
-    <a class="item item-icon-left item-divider dark">
+<task-calendar on-change="change" on-date-tap="dateTap"></task-calendar>
+<div class="card" id="todayTask">
+    <div class="item item-icon-left item-divider dark">
         <i class="icon ion-clipboard"></i>
         今日任务
-    </a>
-    <div class="item item-checkbox" md>
-        <label class="checkbox">
-            <input type="checkbox">
-        </label>
-        今日任务
     </div>
-    <div class="item item-checkbox" md>
+    <div class="item item-checkbox" md ng-repeat="obj in taskObjs track by $index">
         <label class="checkbox">
-            <input type="checkbox">
+            <input type="checkbox" ng-click="taskDone($event,$index)" ng-checked="obj.done">
         </label>
-        今日任务
-    </div>
-    <div class="item item-text-wrap item-checkbox" md>
-        <label class="checkbox">
-            <input type="checkbox">
-        </label>
-        今日任务
-    </div>
-    <div class="item item-checkbox" md>
-        <label class="checkbox">
-            <input type="checkbox">
-        </label>
-        今日任务
+        {{obj.task.title}}
     </div>
 </div>

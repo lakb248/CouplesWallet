@@ -1,0 +1,16 @@
+<ul class="tasks-list">
+    <li ng-repeat="obj in taskObjs track by $index">
+        <div class="card">
+            <div class="item item-divider item-checkbox dark">
+                <label class="checkbox">
+                    <input type="checkbox" ng-checked="obj.done" ng-click="taskDone($event,$index)">
+                </label>
+                任务卡
+            </div>
+            <div class="item item-text-wrap">任务:{{obj.task.title}}</div>
+            <div class="item item-text-wrap">内容:{{obj.task.content}}</div>
+            <div class="item item-text-wrap">开始时间:{{obj.task.date}}</div>
+            <div class="item item-text-wrap">持续时间:{{obj.task.duration}}天</div>
+        </div>
+    </li>
+</ul>

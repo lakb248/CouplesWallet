@@ -42,9 +42,24 @@
 }
 .col{
     text-align: center;
-    /*outline: 1px solid lightgray;*/
+    /*outline: 1px solid lightgrey;*/
     min-height:50px;
+    /*background-color: ghostwhite;*/
+}
+.today{
+    background-color: #dddddd;
 }
 .c-head{
     min-height: 0;
+}
+.task-cell{
+    float: left;
+    height: 6px;
+    width: 6px;
+    border-radius: 3px;
+    background-color: #145fd7;
+    margin:1px;
+}
+.task-done{
+    background-color: green;
 }
